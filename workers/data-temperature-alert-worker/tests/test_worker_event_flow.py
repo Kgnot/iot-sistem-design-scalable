@@ -1,7 +1,27 @@
 from datetime import datetime, timezone
 
+from config.worker_config import SectorWorkerConfig
 from schemas.events import TelemetryEvent, deserialize_event
 from sector_batch_buffer import SectorBatchBuffer
+
+
+def test_worker_routing_pattern_matches_telemetry_key():
+    cfg = SectorWorkerConfig()
+    event = TelemetryEvent(
+        device_id="esp32-c6-001",
+        device_type="esp32-c6-mini",
+        timestamp=datetime.now(timezone.utc),
+        locality_id="18",
+        sector="marruecos-1",
+        sensor_type="temperature",
+        value=20.7,
+        unit="C",
+        locality_name="Rafael Uribe Uribe",
+    )
+
+    assert cfg.routing_patterns == ["telemetry.#"]
+    assert event.routing_key.startswith("telemetry.")
+    assert event.routing_key.count(".") >= 3
 
 
 def test_deserialize_event_accepts_sensor_type_and_locality_name():

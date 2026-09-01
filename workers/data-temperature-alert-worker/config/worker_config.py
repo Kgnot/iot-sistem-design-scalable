@@ -8,4 +8,4 @@ class SectorWorkerConfig:
     spring_endpoint: str = os.getenv(
         "SPRING_BATCH_ENDPOINT", "http://spring-app:8080/api/sectors/batch"
     )
-    routing_patterns: List[str] = field(default_factory=lambda: ["telemetry.*"])
+    routing_patterns: List[str] = field(default_factory=lambda: ["telemetry.#"])
