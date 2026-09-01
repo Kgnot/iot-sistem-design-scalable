@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: "main-server-IoT"
+  rabbitmq:
+    host: rabbitmq        # nombre del servicio en tu docker-compose
+    port: 5672
+    username: guest
+    password: guest
+    

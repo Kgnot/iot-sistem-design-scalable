@@ -1,0 +1,4 @@
+aio-pika
+aiokafka
+pydantic
+python-dotenv

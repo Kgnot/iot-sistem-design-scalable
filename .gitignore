@@ -1,0 +1,48 @@
+# --- Entornos y secretos ---
+.env
+.env.*
+!.env.example
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+*.egg
+
+# --- Entornos virtuales ---
+venv/
+.venv/
+env/
+ENV/
+
+# --- Certificados / credenciales (AWS IoT, Mosquitto TLS) ---
+*.pem
+*.crt
+*.key
+certs/
+
+# --- Datos persistidos localmente si no usas solo volúmenes de Docker ---
+mosquitto/data/
+mosquitto/log/
+influxdb-data/
+minio-data/
+
+# --- Editor / SO ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Testing / coverage ---
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# --- Logs ---
+*.log

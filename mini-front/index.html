@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Monitor de Sectores - IoT</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      margin: 0;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 1.4rem;
+      margin-bottom: 0.25rem;
+    }
+    #status {
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+    #status.connected { color: #4ade80; }
+    #status.disconnected { color: #f87171; }
+
+    .batch {
+      background: #1e293b;
+      border-left: 4px solid #38bdf8;
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .batch h2 {
+      font-size: 1rem;
+      margin: 0 0 0.5rem 0;
+      color: #38bdf8;
+    }
+    .batch table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .batch th, .batch td {
+      text-align: left;
+      padding: 0.3rem 0.5rem;
+      border-bottom: 1px solid #334155;
+    }
+    .batch th {
+      color: #94a3b8;
+      font-weight: 500;
+    }
+    #feed {
+      display: flex;
+      flex-direction: column-reverse; /* el más reciente arriba */
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Monitor de Sectores en Vivo</h1>
+  <div id="status" class="disconnected">Conectando...</div>
+  <div id="feed"></div>
+
+  <script>
+    const SPRING_SSE_URL = "http://localhost:8080/api/sectors/stream";
+
+    const statusEl = document.getElementById("status");
+    const feedEl = document.getElementById("feed");
+
+    const eventSource = new EventSource(SPRING_SSE_URL);
+
+    eventSource.onopen = () => {
+      statusEl.textContent = "Conectado";
+      statusEl.className = "connected";
+    };
+
+    eventSource.onerror = () => {
+      statusEl.textContent = "Desconectado, reintentando...";
+      statusEl.className = "disconnected";
+    };
+
+    eventSource.addEventListener("sector-batch", (event) => {
+      const batch = JSON.parse(event.data);
+      renderBatch(batch);
+    });
+
+    function renderBatch(batch) {
+      const rows = batch.readings.map(r => `
+        <tr>
+          <td>${r.deviceId}</td>
+          <td>${r.sensorType}</td>
+          <td>${r.value} ${r.unit}</td>
+          <td>${new Date(r.timestamp).toLocaleTimeString()}</td>
+        </tr>
+      `).join("");
+
+      const card = document.createElement("div");
+      card.className = "batch";
+      card.innerHTML = `
+        <h2>${batch.localityName} (${batch.localityId}) — ${batch.sector}</h2>
+        <table>
+          <thead>
+            <tr><th>Dispositivo</th><th>Sensor</th><th>Valor</th><th>Hora</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+
+      feedEl.prepend(card);
+    }
+  </script>
+
+</body>
+</html>

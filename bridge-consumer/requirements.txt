@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pydantic
+aiomqtt
+aio-pika
+aiokafka
+influxdb-client[async]
+boto3
+python-dotenv
+aiohttp
