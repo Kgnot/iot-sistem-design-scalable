@@ -64,8 +64,15 @@ public class SectorEventService {
                         .data(batch));
                 logger.fine("Evento sector-batch enviado a un emitter");
             } catch (IOException e) {
-                logger.log(Level.WARNING, "Fallo al enviar a un emitter, se marca para remover", e);
+                logger.log(Level.WARNING,
+                        "Cliente SSE desconectado o socket cerrado. Removiendo emitter. Detalle: " + e.getMessage(),
+                        e);
                 deadEmitters.add(emitter);
+                try {
+                    emitter.complete();
+                } catch (Exception ignored) {
+                    // el cliente ya se desconectó; no es necesario hacer más
+                }
             }
         }
 
