@@ -45,8 +45,10 @@ class BaseEvent(BaseModel):
 # los dos tipos de eventos que existen
 class TelemetryEvent(BaseEvent):
     category: Literal[EventCategory.TELEMETRY] = EventCategory.TELEMETRY
+    sensor_type: SensorType
     value: float
     unit: str
+    locality_name: str
 
     @property
     def routing_key(self) -> str:
