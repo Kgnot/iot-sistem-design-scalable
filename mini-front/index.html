@@ -1,113 +1,265 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Monitor de Sectores - IoT</title>
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      background: #0f172a;
-      color: #e2e8f0;
-      margin: 0;
-      padding: 2rem;
-    }
-    h1 {
-      font-size: 1.4rem;
-      margin-bottom: 0.25rem;
-    }
-    #status {
-      font-size: 0.85rem;
-      margin-bottom: 1.5rem;
-    }
-    #status.connected { color: #4ade80; }
-    #status.disconnected { color: #f87171; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitor de Sectores - IoT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f7f8fa;
+    --border: #e4e7ec;
+    --text: #14181f;
+    --text-dim: #6b7280;
+    --accent: #1d4ed8;
+    --accent-soft: #eaf0fe;
+    --live: #16a34a;
+    --live-soft: #e9f9ef;
+    --down: #b91c1c;
+    --down-soft: #fdecec;
+  }
 
-    .batch {
-      background: #1e293b;
-      border-left: 4px solid #38bdf8;
-      border-radius: 6px;
-      padding: 1rem 1.25rem;
-      margin-bottom: 1rem;
-    }
-    .batch h2 {
-      font-size: 1rem;
-      margin: 0 0 0.5rem 0;
-      color: #38bdf8;
-    }
-    .batch table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.85rem;
-    }
-    .batch th, .batch td {
-      text-align: left;
-      padding: 0.3rem 0.5rem;
-      border-bottom: 1px solid #334155;
-    }
-    .batch th {
-      color: #94a3b8;
-      font-weight: 500;
-    }
-    #feed {
-      display: flex;
-      flex-direction: column-reverse; /* el más reciente arriba */
-    }
-  </style>
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+  }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 1.75rem 2.5rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h1 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  h1 span {
+    color: var(--text-dim);
+    font-weight: 400;
+    font-size: 0.9rem;
+    margin-left: 0.6rem;
+  }
+
+  #status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: 3px;
+    border: 1px solid transparent;
+  }
+
+  #status-pill .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  #status-pill.connecting {
+    color: var(--text-dim);
+    background: var(--surface);
+    border-color: var(--border);
+  }
+  #status-pill.connecting .dot { background: var(--text-dim); }
+
+  #status-pill.connected {
+    color: var(--live);
+    background: var(--live-soft);
+    border-color: #cdefd8;
+  }
+  #status-pill.connected .dot {
+    background: var(--live);
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+
+  #status-pill.disconnected {
+    color: var(--down);
+    background: var(--down-soft);
+    border-color: #f4cfcf;
+  }
+  #status-pill.disconnected .dot { background: var(--down); }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0.4); }
+    50% { box-shadow: 0 0 0 4px rgba(22,163,74,0); }
+  }
+
+  main {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 2rem 2.5rem 4rem;
+  }
+
+  #empty-state {
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+  }
+
+  #feed {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 1rem;
+  }
+
+  .batch {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .batch-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1.1rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .batch-header .locality {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .batch-header .locality-id {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    margin-left: 0.5rem;
+  }
+
+  .sector-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+  }
+
+  th {
+    text-align: left;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    padding: 0.55rem 1.1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 0.55rem 1.1rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  td.value { color: var(--text); font-weight: 500; }
+  td.time { color: var(--text-dim); }
+</style>
 </head>
 <body>
 
-  <h1>Monitor de Sectores en Vivo</h1>
-  <div id="status" class="disconnected">Conectando...</div>
+<header>
+  <h1>Monitor de Sectores<span>lecturas de sensores en tiempo real</span></h1>
+  <div id="status-pill" class="connecting">
+    <span class="dot"></span>
+    <span id="status-text">conectando</span>
+  </div>
+</header>
+
+<main>
+  <div id="empty-state">Esperando el primer lote de lecturas...</div>
   <div id="feed"></div>
+</main>
 
-  <script>
-    const SPRING_SSE_URL = "http://localhost:8080/api/sectors/stream";
+<script>
+  const SPRING_SSE_URL = "http://localhost:8080/api/sectors/stream";
 
-    const statusEl = document.getElementById("status");
-    const feedEl = document.getElementById("feed");
+  const statusPill = document.getElementById("status-pill");
+  const statusText = document.getElementById("status-text");
+  const feedEl = document.getElementById("feed");
+  const emptyState = document.getElementById("empty-state");
 
-    const eventSource = new EventSource(SPRING_SSE_URL);
+  const eventSource = new EventSource(SPRING_SSE_URL);
 
-    eventSource.onopen = () => {
-      statusEl.textContent = "Conectado";
-      statusEl.className = "connected";
-    };
+  eventSource.onopen = () => {
+    statusPill.className = "connected";
+    statusText.textContent = "conectado";
+  };
 
-    eventSource.onerror = () => {
-      statusEl.textContent = "Desconectado, reintentando...";
-      statusEl.className = "disconnected";
-    };
+  eventSource.onerror = () => {
+    statusPill.className = "disconnected";
+    statusText.textContent = "desconectado, reintentando";
+  };
 
-    eventSource.addEventListener("sector-batch", (event) => {
-      const batch = JSON.parse(event.data);
-      renderBatch(batch);
-    });
+  eventSource.addEventListener("sector-batch", (event) => {
+    const batch = JSON.parse(event.data);
+    renderBatch(batch);
+  });
 
-    function renderBatch(batch) {
-      const rows = batch.readings.map(r => `
-        <tr>
-          <td>${r.deviceId}</td>
-          <td>${r.sensorType}</td>
-          <td>${r.value} ${r.unit}</td>
-          <td>${new Date(r.timestamp).toLocaleTimeString()}</td>
-        </tr>
-      `).join("");
+  function renderBatch(batch) {
+    if (emptyState) emptyState.remove();
 
-      const card = document.createElement("div");
-      card.className = "batch";
-      card.innerHTML = `
-        <h2>${batch.localityName} (${batch.localityId}) — ${batch.sector}</h2>
-        <table>
-          <thead>
-            <tr><th>Dispositivo</th><th>Sensor</th><th>Valor</th><th>Hora</th></tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `;
+    const rows = batch.readings.map(r => `
+      <tr>
+        <td>${r.deviceId}</td>
+        <td>${r.sensorType}</td>
+        <td class="value">${r.value} ${r.unit}</td>
+        <td class="time">${new Date(r.timestamp).toLocaleTimeString()}</td>
+      </tr>
+    `).join("");
 
-      feedEl.prepend(card);
-    }
-  </script>
+    const card = document.createElement("div");
+    card.className = "batch";
+    card.innerHTML = `
+      <div class="batch-header">
+        <div>
+          <span class="locality">${batch.localityName}</span>
+          <span class="locality-id">${batch.localityId}</span>
+        </div>
+        <span class="sector-tag">${batch.sector}</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Dispositivo</th><th>Sensor</th><th>Valor</th><th>Hora</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+
+    feedEl.prepend(card);
+  }
+</script>
 
 </body>
 </html>
